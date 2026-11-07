@@ -8,6 +8,11 @@ export interface HighlightItem {
   link: string;
 }
 
+export interface TickerItem {
+  category: string;
+  title: string;
+}
+
 export interface HomeData {
   labName: string;
   tagline: string;
@@ -25,12 +30,31 @@ interface HomeContextType {
 
 const STORAGE_KEY = "insilicovida_home_content";
 
-const defaultTickerItems: TickerItem[] = [
-  { category: "News", title: "Welcoming our new PhD students for the Fall term!" },
-  { category: "Publication", title: "Predicting Endocrine Disruption using Quantitative AOP Networks in Toxicology Letters" },
-  { category: "Poster", title: "In-Silico Modeling of Organophosphate Flame Retardants presented at EuroTox" },
-  { category: "Event", title: "Joint Seminar on Computational Toxicology with DTU on October 14th" },
-  { category: "Research", title: "ENVESOME initiative officially launches the exposome monitoring dashboard" },
+export const defaultTickerItems: TickerItem[] = [
+  {
+    category: "Hackathon",
+    title: "PARC Modellers Hackathon 2026: 12 researchers across Europe collaborate on Agentic AI & FAIR PBPK modeling",
+  },
+  {
+    category: "Award",
+    title: "Deepika Deepika wins Special Poster Award at EUROTOX 2026 Vienna for 100-chemical PBPK benchmark",
+  },
+  {
+    category: "Publication",
+    title: "New study evaluating generic httk vs specialized compound-specific PBPK models in risk assessment",
+  },
+  {
+    category: "Research",
+    title: "Advancing AI-driven QSAR-to-PBPK pipelines & AOP ontologies within the European PARC initiative",
+  },
+  {
+    category: "Software",
+    title: "Open-source R & Python pipelines for high-throughput IVIVE and toxicokinetic simulations",
+  },
+  {
+    category: "News",
+    title: "Welcoming our new researchers and PhD candidates to the InSilico Vida team!",
+  },
 ];
 
 const initialData: HomeData = {
@@ -53,7 +77,16 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        return { ...initialData, ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved);
+        // If cached ticker items contain old dummy items, replace with modern defaultTickerItems
+        const isLegacyDummy = parsed.tickerItems?.some((t: TickerItem) =>
+          t.title?.includes("Organophosphate Flame Retardants") ||
+          t.title?.includes("Joint Seminar on Computational Toxicology with DTU")
+        );
+        if (isLegacyDummy || !parsed.tickerItems || parsed.tickerItems.length === 0) {
+          parsed.tickerItems = defaultTickerItems;
+        }
+        return { ...initialData, ...parsed };
       } catch (e) {
         return initialData;
       }
@@ -74,7 +107,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: data.description || initialData.description,
           bannerImage: data.banner_image || initialData.bannerImage,
           highlights: data.highlights || initialData.highlights,
-          tickerItems: data.ticker_items || initialData.tickerItems,
+          tickerItems: (data.ticker_items && data.ticker_items.length > 0) ? data.ticker_items : defaultTickerItems,
         };
         setHomeData(fetchedData);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(fetchedData));
