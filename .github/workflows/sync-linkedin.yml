@@ -52,10 +52,9 @@ jobs:
 
       - name: Run LinkedIn Sync Script
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://ldmzlabnvcanmufwtuhr.supabase.co' }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'sb_publishable_Z6mMKyOkrNLtPxzbalSRPQ_Is2QEi6z' }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           LINKEDIN_LI_AT: ${{ secrets.LINKEDIN_LI_AT }}
-          LINKEDIN_COMPANY_URL: ${{ secrets.LINKEDIN_COMPANY_URL || 'https://www.linkedin.com/company/insilico-vida/home/' }}
+          LINKEDIN_COMPANY_URL: ${{ secrets.LINKEDIN_COMPANY_URL }}
           LINKEDIN_POST_URL: ${{ github.event.inputs.post_url }}
         run: npx tsx scripts/sync_linkedin.ts
-
