@@ -1,0 +1,134 @@
+---
+- name: Install nginx
+  ansible.builtin.shell: |
+    set -euo pipefail
+    if dpkg -s nginx >/dev/null 2>&1; then
+      exit 0
+    fi
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+  args:
+    executable: /bin/bash
+  register: nginx_install
+  changed_when: nginx_install.rc == 0 and 'Setting up nginx' in (nginx_install.stdout | default(''))
+
+- name: Create the deploy user
+  ansible.builtin.user:
+    name: "{{ deploy_user }}"
+    shell: /bin/bash
+    groups: www-data
+    append: true
+    create_home: true
+
+- name: Ensure the deploy key directory exists on the control machine
+  ansible.builtin.file:
+    path: "{{ deploy_key_path | dirname }}"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+
+- name: Ensure a GitHub Actions deploy key exists on the control machine
+  ansible.builtin.command:
+    cmd: ssh-keygen -t ed25519 -f {{ deploy_key_path }} -N "" -C github-actions-insilicovida
+    creates: "{{ deploy_key_path }}"
+  delegate_to: localhost
+
+- name: Install the deploy public key
+  ansible.builtin.authorized_key:
+    user: "{{ deploy_user }}"
+    key: "{{ lookup('file', deploy_key_path + '.pub') }}"
+    state: present
+
+- name: Create the web root
+  ansible.builtin.file:
+    path: "{{ web_root }}"
+    state: directory
+    owner: "{{ deploy_user }}"
+    group: www-data
+    mode: "0755"
+
+- name: Install the nginx site
+  ansible.builtin.template:
+    src: insilicovida.conf.j2
+    dest: /etc/nginx/sites-available/insilicovida.conf
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Enable the nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/insilicovida.conf
+    dest: /etc/nginx/sites-enabled/insilicovida.conf
+    state: link
+  notify: Reload nginx
+
+- name: Disable the default nginx site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload nginx
+
+- name: Reload nginx before publishing files
+  ansible.builtin.meta: flush_handlers
+
+- name: Check the built site on the control machine
+  ansible.builtin.stat:
+    path: "{{ repo_root }}/dist/index.html"
+  delegate_to: localhost
+  register: dist_index
+
+- name: Require a production build
+  ansible.builtin.assert:
+    that: dist_index.stat.exists
+    fail_msg: "dist/index.html is missing. Run npm run build from the repo root, then rerun this playbook."
+
+- name: Publish the built site
+  ansible.posix.synchronize:
+    src: "{{ repo_root }}/dist/"
+    dest: "{{ web_root }}/"
+    delete: true
+    compress: true
+    rsync_opts:
+      - "--chown={{ deploy_user }}:www-data"
+      - "--chmod=D755,F644"
+
+- name: Ensure published files stay readable by nginx
+  ansible.builtin.file:
+    path: "{{ web_root }}"
+    state: directory
+    owner: "{{ deploy_user }}"
+    group: www-data
+    recurse: true
+    mode: "u=rwX,g=rX,o=rX"
+
+- name: Confirm nginx is serving the site
+  ansible.builtin.uri:
+    url: http://127.0.0.1/
+    return_content: true
+    status_code: 200
+  register: home_page
+
+- name: Confirm the React app was published
+  ansible.builtin.assert:
+    that:
+      - "'InSilicoVida' in home_page.content"
+
+- name: Confirm a client-side route falls back to the app
+  ansible.builtin.uri:
+    url: http://127.0.0.1/team
+    return_content: true
+    status_code: 200
+  register: team_page
+
+- name: Confirm the route fallback is the SPA
+  ansible.builtin.assert:
+    that:
+      - "'id=\"root\"' in team_page.content"
+
+- name: Confirm Odinson searchers are still listening
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ item }}"
+    timeout: 5
+  loop:
+    - 8000
+    - 9000

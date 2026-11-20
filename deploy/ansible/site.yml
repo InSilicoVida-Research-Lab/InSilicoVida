@@ -1,0 +1,8 @@
+---
+- name: Configure and publish InSilicoVida
+  hosts: web
+  vars:
+    repo_root: "{{ playbook_dir }}/../.."
+    deploy_key_path: "{{ playbook_dir }}/../keys/github_actions_ed25519"
+  roles:
+    - web

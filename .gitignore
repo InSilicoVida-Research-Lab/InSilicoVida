@@ -31,3 +31,8 @@ dist-ssr
 tmp_*
 *.html
 .env*
+
+# Server deploy key. The public key is installed by Ansible; the private key
+# is a GitHub Actions secret and must not be committed.
+deploy/keys/
+deploy/ansible/.ansible/

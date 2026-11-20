@@ -29,32 +29,17 @@ npm run preview
 
 ## Deployment
 
-This project is configured to automatically deploy to GitHub Pages when code is pushed to the `main` branch.
+Pushes to `main` and `update-website-features` build the site and publish it to GitHub Pages.
 
-### GitHub Pages Setup
+The site is served from the repository path, so the build sets `VITE_BASE_PATH` to `/InSilicoVida/`. A copy of `index.html` is published as `404.html` so routes such as `/team` still load after a refresh.
 
-1. **Enable GitHub Pages** in your repository settings:
-   - Go to Settings → Pages
-   - Source: Select "GitHub Actions"
+One-time setup in the GitHub repository:
 
-2. **Configure Base Path** (if needed):
-   - If your repository is NOT `username.github.io`, you need to set the base path
-   - In `.github/workflows/deploy.yml`, uncomment and set:
-     ```yaml
-     VITE_BASE_PATH: /your-repo-name/
-     ```
-   - Update `vite.config.ts` if you need a different base path
+1. Commit and push `.github/workflows/deploy.yml`.
+2. Open **Settings → Pages**.
+3. Under **Build and deployment**, set **Source** to **GitHub Actions**.
 
-3. **Push to main branch**:
-   - The workflow will automatically build and deploy your site
-   - Check the Actions tab to see deployment status
-
-### Manual Deployment
-
-You can also trigger deployment manually:
-- Go to Actions tab
-- Select "Deploy to GitHub Pages" workflow
-- Click "Run workflow"
+After the workflow succeeds, the site is at `https://insilicovida-research-lab.github.io/InSilicoVida/`. The Actions tab shows the run and the published URL.
 
 ## Project Structure
 

@@ -1,0 +1,5 @@
+web_root: /var/www/insilicovida
+deploy_user: deploy
+server_names:
+  - insilicovida.com
+  - www.insilicovida.com
