@@ -31,15 +31,11 @@ npm run preview
 
 Pushes to `main` and `update-website-features` build the site and publish it to GitHub Pages.
 
-The site is served from the repository path, so the build sets `VITE_BASE_PATH` to `/InSilicoVida/`. A copy of `index.html` is published as `404.html` so routes such as `/team` still load after a refresh.
+The build sets `VITE_BASE_PATH` to `/` because the public site is [https://insilicohub.org/](https://insilicohub.org/). A copy of `index.html` is published as `404.html` so routes such as `/team` still load after a refresh.
 
-One-time setup in the GitHub repository:
+`insilicohub.org` and `www.insilicohub.org` already point at GitHub Pages. In **Settings → Pages**, set **Source** to **GitHub Actions** and set **Custom domain** to `insilicohub.org`. Leave the base path as `/`. A value of `/${{ github.event.repository.name }}/` would request assets under `/InSilicoVida/` and the custom domain would load a blank page.
 
-1. Commit and push `.github/workflows/deploy.yml`.
-2. Open **Settings → Pages**.
-3. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-
-After the workflow succeeds, the site is at `https://insilicovida-research-lab.github.io/InSilicoVida/`. The Actions tab shows the run and the published URL.
+The published site includes a `CNAME` file for `insilicohub.org`, which is the repository that already owns that domain: [InSilicoVida/InSilicoVida](https://github.com/InSilicoVida/InSilicoVida). Pushing `main` there replaces the December build.
 
 ## Project Structure
 

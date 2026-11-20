@@ -35,12 +35,13 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_BASE_PATH: /
 
       - name: Add GitHub Pages files
         run: |
           touch dist/.nojekyll
           cp dist/index.html dist/404.html
+          echo insilicohub.org > dist/CNAME
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
